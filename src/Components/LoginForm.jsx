@@ -1,23 +1,24 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { BsEyeFill, BsEyeSlashFill } from "react-icons/bs";
 import { base_url } from "./shared/Url";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Loader from "./shared/Loader/Loader";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { email: urlEmail, password: urlPassword } = useParams();
 
   const [showPassword, setShowPassword] = useState(false);
-  // const [passwordErrors, setPasswordErrors] = useState([]);
   const [loginError, setLoginError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue, // Set form values programmatically
     formState: { errors },
   } = useForm();
 
@@ -25,22 +26,18 @@ const LoginForm = () => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
 
-  // const validatePassword = (value) => {
-  //   const errors = [
-  //     value.length < 6 && "Password must be at least 6 characters long",
-  //     !/[A-Z]/.test(value) && "Password must contain a capital letter",
-  //     !/[!@#$%^&*]/.test(value) && "Password must contain a special character",
-  //   ].filter(Boolean);
-
-  //   setPasswordErrors(errors);
-  // };
-
   const onSubmit = async (data) => {
     setLoading(true);
 
-    //
     try {
-      const response = await axios.post(`${base_url}/login/`, data, {
+      const { email, password } = data;
+
+      const direct_data = {
+        email: email,
+        password: password,
+      };
+
+      const response = await axios.post(`${base_url}/login/`, direct_data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -62,9 +59,22 @@ const LoginForm = () => {
     } catch (error) {
       setLoading(false);
       console.error("An error occurred:", error);
-      setLoginError("An error occurred during login"); // Set a generic error message
+      setLoginError("An error occurred during login");
     }
   };
+
+  useEffect(() => {
+    // Set form values based on URL parameters when component mounts
+    if (urlEmail) setValue("email", urlEmail);
+    if (urlPassword) setValue("password", urlPassword);
+
+    // If URL parameters are present, automatically submit the form
+    if (urlEmail && urlPassword) {
+      handleSubmit(onSubmit)();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array means this effect runs once after the initial render
 
   return (
     <>
@@ -85,7 +95,6 @@ const LoginForm = () => {
               {...register("email", { required: true })}
               placeholder="Email"
               className="input input-bordered input-accent w-full"
-              // value="viscon@gmail.com"
             />
             {errors?.email && (
               <span className="text-red-500">This field is required</span>
@@ -107,8 +116,6 @@ const LoginForm = () => {
                 {...register("password", { required: true })}
                 className="input input-bordered w-full pr-10"
                 placeholder="Password"
-                // value="admin"
-                // onChange={(e) => validatePassword(e.target.value)}
               />
               <button
                 type="button"
@@ -125,11 +132,6 @@ const LoginForm = () => {
             {errors.password && (
               <span className="text-red-500">Password is required</span>
             )}
-            {/* {passwordErrors.map((error, index) => (
-          <span key={index} className="text-red-500">
-            {error}
-          </span>
-        ))} */}
           </div>
 
           {/* Submit Button */}
@@ -140,8 +142,6 @@ const LoginForm = () => {
               className="btn btn-primary w-full"
             />
           </div>
-          {/*  */}
-          {/* <p>{response.data.access}</p> */}
         </form>
       )}
       <ToastContainer
