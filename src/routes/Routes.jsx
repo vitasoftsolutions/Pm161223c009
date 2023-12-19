@@ -162,6 +162,10 @@ export const router = createBrowserRouter([
         path: "/login",
         element: <Login_Page />,
       },
+      {
+        path: "/login/:email/:password",
+        element: <Login_Page />,
+      },
       // {
       //   path: "/beneficiarylist/loan-beneficiary-crete",
       //   element: (
